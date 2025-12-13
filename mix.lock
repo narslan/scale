@@ -1,0 +1,4 @@
+%{
+  "colorex": {:hex, :colorex, "1.0.0", "4344fe156e0dacfe7daabe348f5de18f0c3371aa05f7dc835a0d28c44a9a66c9", [:mix], [{:jason, ">= 0.0.0", [hex: :jason, repo: "hexpm", optional: false]}], "hexpm", "3aae023904259011df4412b1c7688da4e65436e09d878c104bbf0da7ca6bd881"},
+  "jason": {:hex, :jason, "1.4.4", "b9226785a9aa77b6857ca22832cffa5d5011a667207eb2a0ad56adb5db443b8a", [:mix], [{:decimal, "~> 1.0 or ~> 2.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm", "c5eb0cab91f094599f94d55bc63409236a8ec69a21a67814529e8d5f6cc90b3b"},
+}
