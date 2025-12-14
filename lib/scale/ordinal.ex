@@ -5,8 +5,7 @@ defmodule Scale.Ordinal do
   This is the Elixir analogue of `d3.scaleOrdinal`, but intentionally keeps
   mapping pure: unknown domain values map to `unknown` (default: `nil`).
 
-  If the domain is longer than the range, the range repeats (wrap-around),
-  matching d3’s common behavior.
+  If the domain is longer than the range, the range repeats (wrap-around).
 
   ## Example (palette-like)
 
@@ -35,13 +34,32 @@ defmodule Scale.Ordinal do
         }
 
   @spec new(keyword()) :: t()
+  @doc """
+  Builds a new ordinal scale.
+
+  ## Options
+
+  - `:domain` (list, default: `[]`) discrete input values (categories).
+  - `:range` (list, default: `[]`) discrete output values. If the domain is
+    longer than the range, the range repeats (wrap-around).
+  - `:unknown` (any, default: `nil`) value returned for inputs not present in
+    the domain.
+
+  ## Notes
+
+  - The scale caches an internal `:index` map derived from the domain.
+    Use `set_domain/2` to update it safely.
+  """
   def new(opts \\ []) do
     domain = Keyword.get(opts, :domain, [])
     range = Keyword.get(opts, :range, [])
     unknown = Keyword.get(opts, :unknown, nil)
 
-    unless is_list(domain), do: raise(ArgumentError, "Scale.Ordinal domain must be a list, got: #{inspect(domain)}")
-    unless is_list(range), do: raise(ArgumentError, "Scale.Ordinal range must be a list, got: #{inspect(range)}")
+    unless is_list(domain),
+      do: raise(ArgumentError, "Scale.Ordinal domain must be a list, got: #{inspect(domain)}")
+
+    unless is_list(range),
+      do: raise(ArgumentError, "Scale.Ordinal range must be a list, got: #{inspect(range)}")
 
     %__MODULE__{
       domain: domain,
@@ -64,6 +82,8 @@ defmodule Scale.Ordinal do
 end
 
 defimpl Scale, for: Scale.Ordinal do
+  @moduledoc false
+
   def domain(%Scale.Ordinal{domain: domain}), do: domain
   def range(%Scale.Ordinal{range: range}), do: range
 

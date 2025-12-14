@@ -34,6 +34,18 @@ defmodule Scale.Linear do
         }
 
   @spec new(keyword()) :: t()
+  @doc """
+  Builds a new linear scale.
+
+  ## Options
+
+  - `:domain` (2-element list/tuple of numbers, default: `[0.0, 1.0]`)
+  - `:range` (2-element list/tuple, default: `[0.0, 1.0]`)
+  - `:interpolate` (`(a, b -> (t -> value))`, default: `&Scale.Interpolator.lerp/2`)
+    Interpolator used for the range endpoints.
+  - `:clamp` (boolean, default: `false`) when `true`, clamps the computed `t`
+    into `[0.0, 1.0]` before interpolation.
+  """
   def new(opts \\ []) do
     domain = opts |> Keyword.get(:domain, [0.0, 1.0]) |> normalize_pair!(:domain)
     range = opts |> Keyword.get(:range, [0.0, 1.0]) |> normalize_pair!(:range)
@@ -84,6 +96,8 @@ defmodule Scale.Linear do
 end
 
 defimpl Scale, for: Scale.Linear do
+  @moduledoc false
+
   def domain(%Scale.Linear{domain: domain}), do: domain
   def range(%Scale.Linear{range: range}), do: range
 

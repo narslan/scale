@@ -1,6 +1,6 @@
 defprotocol Scale do
   @moduledoc """
-  A small protocol for mapping values from a *domain* to a *range*.
+  Protocol for mapping values from a *domain* to a *range*.
 
   Scales are typically passed around as structs and dispatched via this protocol:
 

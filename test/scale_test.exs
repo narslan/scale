@@ -6,6 +6,7 @@ defmodule ScaleTest do
   doctest Scale.Interpolator
   doctest Scale.Ordinal
   doctest Scale.Quantize
+  doctest Scale.Band
 
   test "linear maps domain to pixel range" do
     s = Scale.Linear.new(domain: [0, 10], range: [0, 800])
@@ -119,5 +120,31 @@ defmodule ScaleTest do
     assert Scale.invert(s, :c) == {:ok, {40.0, 60.0}}
     assert Scale.invert(s, :e) == {:ok, {80.0, 100.0}}
     assert Scale.invert(s, :missing) == {:error, :unknown_range_value}
+  end
+
+  test "band maps discrete domain to uniform starts with bandwidth" do
+    s = Scale.Band.new(domain: [:a, :b, :c], range: [0, 300])
+
+    assert Scale.map(s, :a) == 0.0
+    assert Scale.map(s, :b) == 100.0
+    assert Scale.map(s, :c) == 200.0
+    assert Scale.map(s, :missing) == nil
+    assert Scale.Band.bandwidth(s) == 100.0
+    assert Scale.invert(s, 123) == {:error, :not_invertible}
+  end
+
+  test "band supports padding and reversed ranges" do
+    s = Scale.Band.new(domain: [:a, :b, :c], range: [0, 300], padding_inner: 0.1, padding_outer: 0.2)
+
+    assert_in_delta Scale.map(s, :a), 18.1818181818, 1.0e-9
+    assert_in_delta Scale.map(s, :b), 109.0909090909, 1.0e-9
+    assert_in_delta Scale.map(s, :c), 200.0, 1.0e-9
+    assert_in_delta Scale.Band.bandwidth(s), 81.8181818182, 1.0e-9
+
+    s_rev = Scale.Band.new(domain: [:a, :b, :c], range: [300, 0], padding_inner: 0.1, padding_outer: 0.2)
+
+    assert_in_delta Scale.map(s_rev, :a), 200.0, 1.0e-9
+    assert_in_delta Scale.map(s_rev, :b), 109.0909090909, 1.0e-9
+    assert_in_delta Scale.map(s_rev, :c), 18.1818181818, 1.0e-9
   end
 end

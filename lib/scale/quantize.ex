@@ -9,8 +9,8 @@ defmodule Scale.Quantize do
   Values outside the domain clamp to the first/last range value.
 
   `invert/2` is not one-to-one for quantized outputs, so it returns the domain
-  *extent* for a given range value as `{:ok, {x0, x1}}` (or `:error` if the
-  value isn't present in the range).
+  *extent* for a given range value as `{:ok, {x0, x1}}` (or `{:error, reason}`
+  if the value isn't present in the range).
 
   ## Example
 
@@ -37,6 +37,21 @@ defmodule Scale.Quantize do
         }
 
   @spec new(keyword()) :: t()
+  @doc """
+  Builds a new quantize scale.
+
+  ## Options
+
+  - `:domain` (2-element list/tuple of numbers, default: `[0.0, 1.0]`) continuous
+    input domain.
+  - `:range` (list, default: `[]`) discrete output values (buckets). The domain
+    is split into `length(range)` uniform buckets.
+
+  ## Notes
+
+  - Inputs outside the domain clamp to the first/last range value.
+  - `Scale.invert/2` returns `{:ok, {x0, x1}}` for a range value (bucket extent).
+  """
   def new(opts \\ []) do
     domain = opts |> Keyword.get(:domain, [0.0, 1.0]) |> normalize_domain!()
     range = Keyword.get(opts, :range, [])
@@ -63,33 +78,30 @@ defmodule Scale.Quantize do
 end
 
 defimpl Scale, for: Scale.Quantize do
+  @moduledoc false
+
   def domain(%Scale.Quantize{domain: domain}), do: domain
   def range(%Scale.Quantize{range: range}), do: range
 
   def map(%Scale.Quantize{domain: [d0, d1], range: range}, x) when is_number(x) do
-    case range do
-      [] ->
+    cond do
+      range == [] ->
         nil
 
-      _ ->
+      d0 == d1 ->
+        hd(range)
+
+      x <= d0 ->
+        hd(range)
+
+      x >= d1 ->
+        List.last(range)
+
+      true ->
         n = length(range)
-
-        cond do
-          d0 == d1 ->
-            hd(range)
-
-          x <= d0 ->
-            hd(range)
-
-          x >= d1 ->
-            List.last(range)
-
-          true ->
-            t = (x - d0) / (d1 - d0)
-            idx = trunc(:math.floor(t * n))
-            idx = if idx >= n, do: n - 1, else: idx
-            Enum.at(range, idx)
-        end
+        t = (x - d0) / (d1 - d0)
+        idx = min(trunc(:math.floor(t * n)), n - 1)
+        Enum.at(range, idx)
     end
   end
 
@@ -101,23 +113,22 @@ defimpl Scale, for: Scale.Quantize do
     n = length(range)
 
     cond do
-      n == 0 ->
-        {:error, :invalid_range}
+      n == 0 -> {:error, :invalid_range}
+      d0 == d1 -> {:error, :invalid_domain}
+      true -> invert_bucket(d0, d1, range, n, value)
+    end
+  end
 
-      d0 == d1 ->
-        {:error, :invalid_domain}
+  defp invert_bucket(d0, d1, range, n, value) do
+    case Enum.find_index(range, &(&1 == value)) do
+      nil ->
+        {:error, :unknown_range_value}
 
-      true ->
-        case Enum.find_index(range, &(&1 == value)) do
-          nil ->
-            {:error, :unknown_range_value}
-
-          idx ->
-            step = (d1 - d0) / n
-            x0 = d0 + step * idx
-            x1 = if idx == n - 1, do: d1 * 1.0, else: d0 + step * (idx + 1)
-            {:ok, {x0 * 1.0, x1 * 1.0}}
-        end
+      idx ->
+        step = (d1 - d0) / n
+        x0 = d0 + step * idx
+        x1 = d0 + step * (idx + 1)
+        {:ok, {x0 * 1.0, x1 * 1.0}}
     end
   end
 end

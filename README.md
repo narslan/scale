@@ -1,10 +1,10 @@
 # Scale
 
-An Elixir port-in-progress of concepts from `d3-scale`: map values from a *domain* into a *range* for visualization representetion.
+An Elixir port-in-progress of concepts from `d3-scale`: map values from a *domain* into a *range* for visualization representation.
 
 ## Usage
 
-### Linear -> pixels
+### Linear -> numbers/pixel coordinates
 
 ```elixir
 s = Scale.Linear.new(domain: [0, 10], range: [0, 800])
@@ -54,10 +54,18 @@ Scale.map(s, 20)
 #=> :b
 ```
 
-## Installation
-Currently `scale` is not available on hex.pm.
-Add `scale` to your list of dependencies in `mix.exs`:
+### Band -> uniform bands (rows/bars)
 
+```elixir
+s = Scale.Band.new(domain: [:row1, :row2, :row3], range: [0, 300], padding_inner: 0.1)
+
+y = Scale.map(s, :row2)
+h = Scale.Band.bandwidth(s)
+```
+
+## Installation
+Add `scale` to your list of dependencies in `mix.exs`:
+Currently `scale` is not available on hex.pm.
 ```elixir
 def deps do
   [
