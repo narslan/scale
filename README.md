@@ -1,10 +1,10 @@
 # Scale
 
-An Elixir port-in-progress of concepts from `d3-scale`: map values from a *domain* into a *range* for visualization.
+An Elixir port-in-progress of concepts from `d3-scale`: map values from a *domain* into a *range* for visualization representetion.
 
 ## Usage
 
-### Linear → pixels
+### Linear -> pixels
 
 ```elixir
 s = Scale.Linear.new(domain: [0, 10], range: [0, 800])
@@ -16,7 +16,7 @@ Scale.invert(s, 200)
 #=> {:ok, 2.5}
 ```
 
-### Linear → colors
+### Linear -> colors
 
 ```elixir
 s =
@@ -33,7 +33,7 @@ Scale.invert(s, {128, 0, 128})
 #=> :error
 ```
 
-### Ordinal → palette lookup
+### Ordinal -> palette lookup
 
 ```elixir
 s =
@@ -47,14 +47,13 @@ Scale.map(s, "a")
 ```
 
 ## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `scale` to your list of dependencies in `mix.exs`:
+Currently `scale` is not available on hex.pm.
+Add `scale` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:scale, "~> 0.1.0"}
+    {:scale, github: "narslan/scale"}
   ]
 end
 ```
