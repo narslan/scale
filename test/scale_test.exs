@@ -5,6 +5,7 @@ defmodule ScaleTest do
   doctest Scale.Linear
   doctest Scale.Interpolator
   doctest Scale.Ordinal
+  doctest Scale.Quantize
 
   test "linear maps domain to pixel range" do
     s = Scale.Linear.new(domain: [0, 10], range: [0, 800])
@@ -37,7 +38,7 @@ defmodule ScaleTest do
       )
 
     assert Scale.map(s, 0.5) == {128, 0, 128}
-    assert Scale.invert(s, {128, 0, 128}) == :error
+    assert Scale.invert(s, {128, 0, 128}) == {:error, :invalid_range}
   end
 
   # Taken from https://d3js.org/d3-scale/linear#_linear
@@ -53,7 +54,7 @@ defmodule ScaleTest do
 
     assert Scale.map(s, 20) == {154, 52, 57}
     assert Scale.map(s, 50) == {123, 81, 103}
-    assert Scale.invert(s, {128, 0, 128}) == :error
+    assert Scale.invert(s, {128, 0, 128}) == {:error, :invalid_range}
   end
 
   test "clamp clamps the value within the scales range" do
@@ -87,7 +88,7 @@ defmodule ScaleTest do
     assert Scale.map(s, "a") == {165, 42, 42}
     assert Scale.map(s, "c") == {12, 34, 250}
     assert Scale.map(s, "missing") == nil
-    assert Scale.invert(s, {165, 42, 42}) == :error
+    assert Scale.invert(s, {165, 42, 42}) == {:error, :not_invertible}
   end
 
   test "ordinal wraps the range when domain is longer" do
@@ -95,5 +96,28 @@ defmodule ScaleTest do
     assert Scale.map(s, :a) == 1
     assert Scale.map(s, :b) == 2
     assert Scale.map(s, :c) == 1
+  end
+
+  test "quantize maps continuous domain to discrete range buckets" do
+    s = Scale.Quantize.new(domain: [0, 100], range: [:a, :b, :c, :d, :e])
+
+    assert Scale.map(s, -10) == :a
+    assert Scale.map(s, 0) == :a
+    assert Scale.map(s, 19.999) == :a
+    assert Scale.map(s, 20) == :b
+    assert Scale.map(s, 40) == :c
+    assert Scale.map(s, 60) == :d
+    assert Scale.map(s, 80) == :e
+    assert Scale.map(s, 100) == :e
+    assert Scale.map(s, 110) == :e
+  end
+
+  test "quantize invert returns bucket extents" do
+    s = Scale.Quantize.new(domain: [0, 100], range: [:a, :b, :c, :d, :e])
+
+    assert Scale.invert(s, :a) == {:ok, {0.0, 20.0}}
+    assert Scale.invert(s, :c) == {:ok, {40.0, 60.0}}
+    assert Scale.invert(s, :e) == {:ok, {80.0, 100.0}}
+    assert Scale.invert(s, :missing) == {:error, :unknown_range_value}
   end
 end

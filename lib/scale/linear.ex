@@ -16,7 +16,7 @@ defmodule Scale.Linear do
       iex> Scale.map(s, 0.5)
       {128, 0, 128}
       iex> Scale.invert(s, {128, 0, 128})
-      :error
+      {:error, :invalid_range}
   """
 
   alias Scale.Interpolator
@@ -103,7 +103,7 @@ defimpl Scale, for: Scale.Linear do
     denom = r1 - r0
 
     if denom == 0 do
-      :error
+      {:error, :invalid_range}
     else
       t = (y - r0) / denom
       t = if clamp, do: clamp01(t), else: t
@@ -111,7 +111,7 @@ defimpl Scale, for: Scale.Linear do
     end
   end
 
-  def invert(%Scale.Linear{}, _y), do: :error
+  def invert(%Scale.Linear{}, _y), do: {:error, :invalid_range}
 
   defp t_from_pair(a, b, x) do
     denom = b - a

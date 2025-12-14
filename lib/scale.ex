@@ -10,7 +10,8 @@ defprotocol Scale do
       iex> Scale.invert(s, 100)
       {:ok, 2.0}
 
-  Not all scales support inversion. In that case `invert/2` returns `:error`.
+  Not all scales support inversion. In that case `invert/2` returns
+  `{:error, reason}`.
   """
 
   @spec domain(t) :: any
@@ -22,6 +23,12 @@ defprotocol Scale do
   @spec map(t, any) :: any
   def map(scale, value)
 
-  @spec invert(t, any) :: {:ok, any} | :error
+  @type invert_error ::
+          :not_invertible
+          | :unknown_range_value
+          | :invalid_domain
+          | :invalid_range
+
+  @spec invert(t, any) :: {:ok, any} | {:error, invert_error()}
   def invert(scale, value)
 end

@@ -30,7 +30,7 @@ Scale.map(s, 0.5)
 #=> {128, 0, 128}
 
 Scale.invert(s, {128, 0, 128})
-#=> :error
+#=> {:error, :invalid_range}
 ```
 
 ### Ordinal -> palette lookup
@@ -44,6 +44,14 @@ s =
 
 Scale.map(s, "a")
 #=> {165, 42, 42}
+```
+
+### Quantize -> buckets
+
+```elixir
+s = Scale.Quantize.new(domain: [0, 100], range: [:a, :b, :c, :d, :e])
+Scale.map(s, 20)
+#=> :b
 ```
 
 ## Installation

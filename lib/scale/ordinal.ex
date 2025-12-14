@@ -18,7 +18,7 @@ defmodule Scale.Ordinal do
       iex> Scale.map(s, "missing")
       nil
       iex> Scale.invert(s, {165, 42, 42})
-      :error
+      {:error, :not_invertible}
   """
 
   @enforce_keys [:domain, :range, :index, :unknown]
@@ -80,5 +80,5 @@ defimpl Scale, for: Scale.Ordinal do
     end
   end
 
-  def invert(%Scale.Ordinal{}, _value), do: :error
+  def invert(%Scale.Ordinal{}, _value), do: {:error, :not_invertible}
 end
