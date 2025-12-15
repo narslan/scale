@@ -42,6 +42,16 @@ defmodule ScaleTest do
     assert Scale.invert(s, {128, 0, 128}) == {:error, :invalid_range}
   end
 
+  test "oklab and oklch interpolators preserve endpoints" do
+    oklab = Scale.Interpolator.oklab({255, 0, 0}, {0, 0, 255})
+    assert oklab.(0.0) == {255, 0, 0}
+    assert oklab.(1.0) == {0, 0, 255}
+
+    oklch = Scale.Interpolator.oklch({255, 0, 0}, {0, 0, 255})
+    assert oklch.(0.0) == {255, 0, 0}
+    assert oklch.(1.0) == {0, 0, 255}
+  end
+
   # Taken from https://d3js.org/d3-scale/linear#_linear
   # color(20); // "rgb(154, 52, 57)"
   # color(50); // "rgb(123, 81, 103)"
