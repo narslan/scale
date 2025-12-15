@@ -13,6 +13,18 @@ defmodule Scale.Band do
 
   `invert/2` is not supported and returns `{:error, :not_invertible}`.
 
+  ## Point scales (d3.scalePoint)
+
+  A point scale can be represented as a band scale with `padding_inner: 1.0`,
+  which makes the `bandwidth/1` equal to `0.0` and turns each band into a single
+  position.
+
+      iex> s = Scale.Band.new(domain: [:a, :b, :c], range: [0, 300], padding_inner: 1.0, padding_outer: 0.2)
+      iex> Scale.map(s, :b)
+      150.0
+      iex> Scale.Band.bandwidth(s)
+      0.0
+
   ## Example
 
       iex> s = Scale.Band.new(domain: [:a, :b, :c], range: [0, 300])
