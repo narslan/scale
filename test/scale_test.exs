@@ -52,6 +52,50 @@ defmodule ScaleTest do
     assert oklch.(1.0) == {0, 0, 255}
   end
 
+  describe "Interpolator easing helpers" do
+    test "smoothstep clamps and shapes t" do
+      assert Scale.Interpolator.smoothstep(-1.0) == 0.0
+      assert Scale.Interpolator.smoothstep(2.0) == 1.0
+
+      assert_in_delta Scale.Interpolator.smoothstep(0.25), 0.15625, 1.0e-12
+      assert_in_delta Scale.Interpolator.smoothstep(0.75), 0.84375, 1.0e-12
+      assert_in_delta Scale.Interpolator.smoothstep(0.0, 10.0, 5.0), 0.5, 1.0e-12
+    end
+
+    test "smootherstep clamps and is smoother than smoothstep" do
+      assert Scale.Interpolator.smootherstep(-1.0) == 0.0
+      assert Scale.Interpolator.smootherstep(2.0) == 1.0
+
+      assert_in_delta Scale.Interpolator.smootherstep(0.25), 0.103515625, 1.0e-12
+      assert_in_delta Scale.Interpolator.smootherstep(0.75), 0.896484375, 1.0e-12
+      assert_in_delta Scale.Interpolator.smootherstep(0.0, 10.0, 5.0), 0.5, 1.0e-12
+    end
+
+    test "edge0 == edge1 raises for edge-based variants" do
+      assert_raise ArgumentError, fn -> Scale.Interpolator.smoothstep(1, 1, 0.5) end
+      assert_raise ArgumentError, fn -> Scale.Interpolator.smootherstep(1, 1, 0.5) end
+    end
+
+    test "eased wraps an interpolator builder" do
+      i =
+        Scale.Interpolator.eased(
+          &Scale.Interpolator.lerp/2,
+          &Scale.Interpolator.smoothstep/1
+        ).(0, 10)
+
+      assert_in_delta i.(0.25), 1.5625, 1.0e-12
+
+      rgb =
+        Scale.Interpolator.eased(
+          &Scale.Interpolator.rgb/2,
+          &Scale.Interpolator.smootherstep/1
+        ).({255, 0, 0}, {0, 0, 255})
+
+      assert rgb.(0.0) == {255, 0, 0}
+      assert rgb.(1.0) == {0, 0, 255}
+    end
+  end
+
   # Taken from https://d3js.org/d3-scale/linear#_linear
   # color(20); // "rgb(154, 52, 57)"
   # color(50); // "rgb(123, 81, 103)"

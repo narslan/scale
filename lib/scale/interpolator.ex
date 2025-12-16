@@ -233,5 +233,104 @@ defmodule Scale.Interpolator do
   defp cbrt(x) when x < 0.0, do: -:math.pow(-x, 1.0 / 3.0)
   defp cbrt(x), do: :math.pow(x, 1.0 / 3.0)
 
+  @doc """
+  Quintic smoothstep ("smootherstep") easing.
+
+  This is the classic `6t^5 - 15t^4 + 10t^3` curve used by Perlin-style noise
+  implementations to smoothly interpolate values on a grid.
+
+  Input is clamped to `0.0..1.0`.
+
+      iex> Scale.Interpolator.smootherstep(0.0)
+      0.0
+      iex> Scale.Interpolator.smootherstep(1.0)
+      1.0
+      iex> Scale.Interpolator.smootherstep(-1.0)
+      0.0
+      iex> Scale.Interpolator.smootherstep(2.0)
+      1.0
+  """
+  @spec smootherstep(number()) :: float()
+  def smootherstep(t) do
+    t = clamp01(t)
+    t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
+  end
+
+  @doc """
+  Cubic smoothstep easing.
+
+  Returns a smooth Hermite interpolation between `0.0` and `1.0` for input `t`.
+  Input is clamped to `0.0..1.0`.
+
+      iex> Scale.Interpolator.smoothstep(0.0)
+      0.0
+      iex> Scale.Interpolator.smoothstep(1.0)
+      1.0
+      iex> Scale.Interpolator.smoothstep(0.5)
+      0.5
+  """
+  @spec smoothstep(number()) :: float()
+  def smoothstep(t) do
+    t = clamp01(t)
+    t * t * (3.0 - 2.0 * t)
+  end
+
+  @doc """
+  Applies `smootherstep/1` after normalizing `x` between `edge0` and `edge1`.
+
+  `x` is normalized by `(x - edge0) / (edge1 - edge0)` then clamped to `0.0..1.0`.
+
+      iex> Scale.Interpolator.smootherstep(0.0, 10.0, 5.0)
+      0.5
+  """
+  @spec smootherstep(number(), number(), number()) :: float()
+  def smootherstep(edge0, edge1, x) do
+    if edge0 == edge1 do
+      raise ArgumentError, "Scale.Interpolator.smootherstep/3 expects edge0 != edge1"
+    end
+
+    smootherstep((x - edge0) / (edge1 - edge0))
+  end
+
+  @doc """
+  Applies `smoothstep/1` after normalizing `x` between `edge0` and `edge1`.
+
+  `x` is normalized by `(x - edge0) / (edge1 - edge0)` then clamped to `0.0..1.0`.
+
+      iex> Scale.Interpolator.smoothstep(0.0, 10.0, 5.0)
+      0.5
+  """
+  @spec smoothstep(number(), number(), number()) :: float()
+  def smoothstep(edge0, edge1, x) do
+    if edge0 == edge1 do
+      raise ArgumentError, "Scale.Interpolator.smoothstep/3 expects edge0 != edge1"
+    end
+
+    smoothstep((x - edge0) / (edge1 - edge0))
+  end
+
+  @doc """
+  Wraps an interpolator builder to apply an easing function to `t` before sampling.
+
+  This lets you reuse interpolators (`lerp/2`, `rgb/2`, `oklab/2`, etc.) while
+  shaping the transition (for example with `smoothstep/1` or `smootherstep/1`).
+
+  The easing function is applied as-is (not clamped) so you can opt into
+  extrapolation or clamping depending on the use case.
+
+      iex> i = Scale.Interpolator.eased(&Scale.Interpolator.lerp/2, &Scale.Interpolator.smoothstep/1).(0, 10)
+      iex> i.(0.25)
+      1.5625
+  """
+  @spec eased((any(), any() -> (number() -> any())), (number() -> number())) ::
+          (any(), any() -> (number() -> any()))
+  def eased(interpolator, easing_fun)
+      when is_function(interpolator, 2) and is_function(easing_fun, 1) do
+    fn a, b ->
+      base = interpolator.(a, b)
+      fn t -> base.(easing_fun.(t)) end
+    end
+  end
+
   defp cube(x), do: x * x * x
 end
