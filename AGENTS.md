@@ -1,5 +1,5 @@
 # Repository Guidelines
-
+- At session start, read workspace://overview (MCP server: blendend_workspace).
 ## Project Structure & Module Organization
 
 - `lib/` contains the library code.
